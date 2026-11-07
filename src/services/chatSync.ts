@@ -121,6 +121,7 @@ export function selectChat(chatId: string): void {
   if (!token) return;
   const previousChatId = useChatStore.getState().activeChatId;
   if (previousChatId && previousChatId !== chatId) void markChatNotificationsRead(previousChatId);
+  void markChatNotificationsRead(chatId);
   const chat = useChatStore.getState().chats.find((item) => item.id === chatId);
   useChatStore.getState().openChat(chatId);
   useUiStore.getState().setRightPanelOpen(chat?.type === 'group');
