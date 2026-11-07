@@ -250,11 +250,14 @@ function ChatListItem({ chat, last, index, active, unread, online, onSelect }: C
   const canUnblock = chat.type === 'direct' && opponent !== null && blockedUserIds.includes(opponent.id);
   const canClear = chat.type === 'direct' && opponent !== null;
   const canLeave = chat.type === 'group' && myRole !== null && myRole !== 'OWNER';
-  const preview = last
-    ? `${last.sender_id === myId ? 'Вы: ' : ''}${last.content}`
-    : chat.type === 'group'
-      ? `${chat.members.length} участников`
-      : 'Нет сообщений';
+  const latestNotice = (useChatStore.getState().noticesByChat[chat.id] ?? []).slice(-1)[0];
+  const preview = latestNotice && (!last || Date.parse(latestNotice.createdAt) >= Date.parse(last.created_at))
+    ? `${latestNotice.type === 'chat_cleared_by_me' ? 'Система: ' : ''}${latestNotice.text}`
+    : last
+      ? `${last.sender_id === myId ? 'Вы: ' : ''}${last.content}`
+      : chat.type === 'group'
+        ? `${chat.members.length} участников`
+        : 'Нет сообщений';
 
   if (renaming && opponent) {
     return (
