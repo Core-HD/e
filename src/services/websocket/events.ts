@@ -199,6 +199,10 @@ export function parseChatSocketEvent(raw: unknown): ChatSocketEvent | null {
       const event = parseNotificationEvent(raw);
       return event && event.type === 'message_reactions_updated' ? event : null;
     }
+    case 'chat_cleared': {
+      const event = parseNotificationEvent(raw);
+      return event && event.type === 'chat_cleared' ? event : null;
+    }
     case 'error':
       return typeof raw.detail === 'string' ? { type: 'error', detail: raw.detail } : null;
     default:
