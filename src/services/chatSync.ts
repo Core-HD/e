@@ -96,7 +96,7 @@ async function loadNotifications(): Promise<void> {
   }
 }
 
-async function markChatNotificationsRead(chatId: string): Promise<void> {
+export async function markChatNotificationsRead(chatId: string): Promise<void> {
   const token = currentToken();
   if (!token) return;
   const unreadIds = (useChatStore.getState().noticesByChat[chatId] ?? [])
