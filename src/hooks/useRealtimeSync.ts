@@ -127,9 +127,19 @@ export function useRealtimeSync(userId: number | null, token: string | null): vo
         case 'chat_deleted':
           handleChatDeleted(event.chat_id);
           return;
-        case 'chat_cleared':
+        case 'chat_cleared': {
           chatStore.clearChatMessages(event.chat_id);
+          if (event.cleared_by !== userId) {
+            const chat = chatStore.chats.find((item) => item.id === event.chat_id);
+            const actorName = chat?.members.find((member) => member.id === event.cleared_by)?.name;
+            chatStore.addNotice(event.chat_id, `${actorName ?? 'Собеседник'} очистил чат`, {
+              id: `chat-cleared-${event.chat_id}-${event.cleared_by}`,
+              type: 'chat_cleared_by_other',
+              unread: false,
+            });
+          }
           return;
+        }
         case 'error':
           chatStore.setNotice(event.detail);
       }
