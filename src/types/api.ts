@@ -248,4 +248,5 @@ export type ChatSocketEvent =
   | MessageReadEvent
   | MemberRoleChangedEvent
   | ChatDescriptionUpdatedEvent
-  | MessageReactionsUpdatedEvent;
+  | MessageReactionsUpdatedEvent
+  | ChatClearedEvent;
