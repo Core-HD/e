@@ -971,6 +971,10 @@ h3 {
   border-bottom: 1px solid var(--border-soft);
 }
 
+.chat-header__row { justify-content: space-between; }
+.chat-header__info { display: flex; align-items: center; gap: var(--space-2); flex: 1; min-width: 0; padding: 0; border: 0; }
+.chat-header__row .chat-row__menu { margin-left: auto; }
+
 .chat-header--button {
   width: 100%;
   border-top: none;
