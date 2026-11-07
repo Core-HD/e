@@ -251,13 +251,19 @@ function ChatListItem({ chat, last, index, active, unread, online, onSelect }: C
   const canClear = chat.type === 'direct' && opponent !== null;
   const canLeave = chat.type === 'group' && myRole !== null && myRole !== 'OWNER';
   const latestNotice = (useChatStore.getState().noticesByChat[chat.id] ?? []).slice(-1)[0];
-  const preview = latestNotice && (!last || Date.parse(latestNotice.createdAt) >= Date.parse(last.created_at))
-    ? `${latestNotice.type === 'chat_cleared_by_me' ? 'Система: ' : ''}${latestNotice.text}`
-    : last
-      ? `${last.sender_id === myId ? 'Вы: ' : ''}${last.content}`
-      : chat.type === 'group'
-        ? `${chat.members.length} участников`
-        : 'Нет сообщений';
+  const latestReaction = last?.reactions.reduce((latest, reaction) =>
+    !latest || Date.parse(reaction.created_at) > Date.parse(latest.created_at) ? reaction : latest, undefined as MessageRead['reactions'][number] | undefined);
+  const noticeIsLatest = Boolean(latestNotice && (!last || Date.parse(latestNotice.createdAt) >= Date.parse(last.created_at)));
+  const reactionIsLatest = Boolean(latestReaction && last && Date.parse(latestReaction.created_at) > Date.parse(last.created_at) && (!latestNotice || Date.parse(latestReaction.created_at) > Date.parse(latestNotice.createdAt)));
+  const preview = noticeIsLatest
+    ? `${latestNotice?.type?.startsWith('chat_cleared') ? 'Система: ' : ''}${latestNotice?.text ?? ''}`
+    : reactionIsLatest
+      ? `Реакция ${latestReaction?.emoji}`
+      : last
+        ? `${last.sender_id === myId ? 'Вы: ' : ''}${last.content}`
+        : chat.type === 'group'
+          ? `${chat.members.length} участников`
+          : 'Нет сообщений';
 
   if (renaming && opponent) {
     return (
