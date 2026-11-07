@@ -10,7 +10,7 @@ import { MessageActionsDialog } from './MessageActionsDialog';
 import { ForwardMessageDialog } from './ForwardMessageDialog';
 import { useChatMembers } from '../../hooks/useChatMembers';
 import { TypingIndicator } from './TypingIndicator';
-import { acknowledgeIncomingMessages, loadOlder, reactToMessage, retryPendingMessage, sendChatMessage, unblockOpponent } from '../../services/chatSync';
+import { acknowledgeIncomingMessages, blockOpponent, clearDirectChatMessages, leaveGroup, loadOlder, markChatNotificationsRead, reactToMessage, retryPendingMessage, sendChatMessage, unblockOpponent } from '../../services/chatSync';
 import { sendTyping } from '../../services/websocket/realtime';
 import { useAuthStore } from '../../store/authStore';
 import { useChatStore } from '../../store/chatStore';
@@ -48,14 +48,19 @@ export function ChatWindow() {
   const [reactionDialog, setReactionDialog] = useState<{ mode: 'pick' | 'who'; messageId: string } | null>(null);
   const [forwardMessage, setForwardMessage] = useState<MessageRead | null>(null);
   const [replyTo, setReplyTo] = useState<MessageRead | null>(null);
+  const [chatMenuOpen, setChatMenuOpen] = useState(false);
 
   useEffect(() => {
     setReplyTo(null);
   }, [activeChatId]);
 
   useEffect(() => {
-    if (myId !== null && messages && activeChatId) acknowledgeIncomingMessages(activeChatId, messages, myId);
-  }, [activeChatId, messages, myId]);
+    if (myId !== null && messages && activeChatId && chatSocket === 'open') acknowledgeIncomingMessages(activeChatId, messages, myId);
+  }, [activeChatId, messages, myId, chatSocket]);
+
+  useEffect(() => {
+    if (activeChatId && notices?.some((notice) => notice.unread)) void markChatNotificationsRead(activeChatId);
+  }, [activeChatId, notices]);
 
   if (!chat || !activeChatId || myId === null) {
     return (
@@ -100,19 +105,45 @@ export function ChatWindow() {
 
   return (
     <section className="chat-window glass">
-      <button
-        type="button"
-        className="chat-header chat-header--button"
-        onClick={toggleRightPanel}
-        aria-expanded={rightPanelOpen}
-        aria-label={chat.type === 'group' ? 'Информация о группе' : 'Информация о собеседнике'}
-      >
-        <Avatar name={title} size={44} status={chat.type === 'direct' ? status : null} />
-        <div className="chat-header__meta">
-          <h2>{title}</h2>
-          <span className="muted">{subtitle}</span>
+      <div className="chat-header chat-header__row">
+        <button
+          type="button"
+          className="chat-header--button chat-header__info"
+          onClick={toggleRightPanel}
+          aria-expanded={rightPanelOpen}
+          aria-label={chat.type === 'group' ? 'Информация о группе' : 'Информация о собеседнике'}
+        >
+          <Avatar name={title} size={44} status={chat.type === 'direct' ? status : null} />
+          <div className="chat-header__meta">
+            <h2>{title}</h2>
+            <span className="muted">{subtitle}</span>
+          </div>
+        </button>
+        <div className="chat-row__menu">
+          <button type="button" className="chat-row__action" aria-label="Действия с чатом" aria-haspopup="menu" aria-expanded={chatMenuOpen} onClick={() => setChatMenuOpen((open) => !open)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+          </button>
+          {chatMenuOpen && (
+            <div className="chat-menu-overlay" onClick={() => setChatMenuOpen(false)}>
+              <div className="glass chat-menu" role="menu" aria-label="Действия с чатом" onClick={(event) => event.stopPropagation()}>
+                {chat.type === 'direct' && opponent && (
+                  <>
+                    <button type="button" role="menuitem" onClick={() => { setChatMenuOpen(false); if (window.confirm(`Очистить чат с «${title}»?`)) void clearDirectChatMessages(activeChatId); }}>Очистить чат</button>
+                    {opponentBlocked ? (
+                      <button type="button" role="menuitem" onClick={() => { setChatMenuOpen(false); void unblockOpponent(opponent); }}>Разблокировать</button>
+                    ) : (
+                      <button type="button" role="menuitem" className="chat-menu__danger" onClick={() => { setChatMenuOpen(false); if (window.confirm(`Заблокировать «${title}»?`)) void blockOpponent(opponent); }}>Заблокировать</button>
+                    )}
+                  </>
+                )}
+                {chat.type === 'group' && myRole !== 'OWNER' && (
+                  <button type="button" role="menuitem" className="chat-menu__danger" onClick={() => { setChatMenuOpen(false); if (window.confirm(`Покинуть группу «${title}»?`)) void leaveGroup(activeChatId); }}>Покинуть группу</button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-      </button>
+      </div>
 
       <MessageList
         chatId={activeChatId}
