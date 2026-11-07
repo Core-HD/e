@@ -145,7 +145,7 @@ export const useChatStore = create<ChatState>((set) => ({
       messagesStatus: { ...state.messagesStatus, [chatId]: 'ready' },
       noticesByChat: {
         ...state.noticesByChat,
-        [chatId]: (state.noticesByChat[chatId] ?? []).filter((notice) => notice.type === 'chat_cleared_by_me'),
+        [chatId]: (state.noticesByChat[chatId] ?? []).filter((notice) => notice.type?.startsWith('chat_cleared')),
       },
     })),
 
