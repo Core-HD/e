@@ -157,7 +157,6 @@ export const useChatStore = create<ChatState>((set) => ({
           {
             id: options.id ?? crypto.randomUUID(),
             text,
-            createdAt: new Date().toISOString(),
             unread: options.unread ?? false,
             type: options.type,
             createdAt: options.createdAt ?? new Date().toISOString(),
