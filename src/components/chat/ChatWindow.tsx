@@ -130,13 +130,13 @@ export function ChatWindow() {
                   <>
                     <button type="button" role="menuitem" onClick={() => { setChatMenuOpen(false); if (window.confirm(`Очистить чат с «${title}»?`)) void clearDirectChatMessages(activeChatId); }}>Очистить чат</button>
                     {opponentBlocked ? (
-                      <button type="button" role="menuitem" onClick={() => { setChatMenuOpen(false); void unblockOpponent(opponent); }}>Разблокировать</button>
+                      <button type="button" role="menuitem" onClick={() => { setChatMenuOpen(false); void unblockOpponent(opponent).catch(() => useChatStore.getState().setNotice('Не удалось разблокировать пользователя.')); }}>Разблокировать</button>
                     ) : (
-                      <button type="button" role="menuitem" className="chat-menu__danger" onClick={() => { setChatMenuOpen(false); if (window.confirm(`Заблокировать «${title}»?`)) void blockOpponent(opponent); }}>Заблокировать</button>
+                      <button type="button" role="menuitem" className="chat-menu__danger" onClick={() => { setChatMenuOpen(false); if (window.confirm(`Заблокировать «${title}»?`)) void blockOpponent(opponent).catch(() => useChatStore.getState().setNotice('Не удалось заблокировать пользователя.')); }}>Заблокировать</button>
                     )}
                   </>
                 )}
-                {chat.type === 'group' && myRole !== 'OWNER' && (
+                {chat.type === 'group' && myRole !== null && myRole !== 'OWNER' && (
                   <button type="button" role="menuitem" className="chat-menu__danger" onClick={() => { setChatMenuOpen(false); if (window.confirm(`Покинуть группу «${title}»?`)) void leaveGroup(activeChatId); }}>Покинуть группу</button>
                 )}
               </div>
