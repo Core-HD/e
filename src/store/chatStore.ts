@@ -19,6 +19,7 @@ export interface SystemNotice {
   text: string;
   createdAt: string;
   unread: boolean;
+  type?: string;
 }
 
 interface ChatState {
@@ -49,7 +50,7 @@ interface ChatState {
   setMessagesError: (chatId: string) => void;
   mergeHistory: (chatId: string, messages: MessageRead[], hasOlder: boolean) => void;
   clearChatMessages: (chatId: string) => void;
-  addNotice: (chatId: string, text: string, options?: { id?: string; unread?: boolean }) => void;
+  addNotice: (chatId: string, text: string, options?: { id?: string; unread?: boolean; type?: string; createdAt?: string }) => void;
   markNoticesRead: (chatId: string, ids: string[]) => void;
   bumpMemberRoles: (chatId: string) => void;
   removeMessage: (chatId: string, messageId: string) => void;
@@ -139,7 +140,13 @@ export const useChatStore = create<ChatState>((set) => ({
   clearChatMessages: (chatId) =>
     set((state) => ({
       messagesByChat: { ...state.messagesByChat, [chatId]: [] },
+      pendingByChat: { ...state.pendingByChat, [chatId]: [] },
       hasOlderByChat: { ...state.hasOlderByChat, [chatId]: false },
+      messagesStatus: { ...state.messagesStatus, [chatId]: 'ready' },
+      noticesByChat: {
+        ...state.noticesByChat,
+        [chatId]: (state.noticesByChat[chatId] ?? []).filter((notice) => notice.type === 'chat_cleared_by_me'),
+      },
     })),
 
   addNotice: (chatId, text, options = {}) =>
@@ -152,6 +159,8 @@ export const useChatStore = create<ChatState>((set) => ({
             text,
             createdAt: new Date().toISOString(),
             unread: options.unread ?? false,
+            type: options.type,
+            createdAt: options.createdAt ?? new Date().toISOString(),
           },
         ]),
       },
