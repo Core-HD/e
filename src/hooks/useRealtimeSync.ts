@@ -62,6 +62,8 @@ export function useRealtimeSync(userId: number | null, token: string | null): vo
             chatStore.addNotice(resolvedChatId, notification.content, {
               id: notification.id,
               unread: !notification.is_read,
+              type: notification.type,
+              createdAt: notification.created_at,
             });
           }
           if (notification.type === 'user_blocked') {
@@ -125,6 +127,9 @@ export function useRealtimeSync(userId: number | null, token: string | null): vo
         case 'chat_deleted':
           handleChatDeleted(event.chat_id);
           return;
+        case 'chat_cleared':
+          chatStore.clearChatMessages(event.chat_id);
+          return;
         case 'error':
           chatStore.setNotice(event.detail);
       }
@@ -133,7 +138,7 @@ export function useRealtimeSync(userId: number | null, token: string | null): vo
     const handleChatEvent = (event: ChatSocketEvent) => {
       const chatStore = useChatStore.getState();
       const activeChatId = chatStore.activeChatId;
-      if (event.type === 'new_message' || event.type === 'message_read' || event.type === 'message_reactions_updated') {
+      if (event.type === 'new_message' || event.type === 'message_read' || event.type === 'message_reactions_updated' || event.type === 'chat_cleared') {
         handleNotification(event);
         return;
       }
